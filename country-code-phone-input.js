@@ -39,38 +39,6 @@ function phoneInput(input_id) {
     }
 }
 
-function changeFlagByCountryCode(inputContainer, countryCodeInput) {
-    let foundedIndex;
-    let countryCodeElement = $(inputContainer).find(".country__code")[0];
-    let countryCodeValue = $(countryCodeInput).val();
-    let selectedFlagElement = $(countryCodeElement).find(".selected__flag .flag")[0];
-    countryCodeValue = countryCodeValue.replace('+', '');
-    if (countryCodeValue) {
-        $.each(countries, function (i, field) {
-            if (field['code'] === countryCodeValue) {
-                foundedIndex = i;
-                return false;
-            }
-        });
-        let flag = '';
-        if (countries[foundedIndex])
-            flag = countries[foundedIndex]['flag'];
-
-        $(selectedFlagElement).removeClass().addClass("flag " + flag);
-        if (countryCodePlusSign)
-            $(countryCodeInput).val("+" + countryCodeValue);
-        else
-            $(countryCodeInput).val(countryCodeValue);
-    } else {
-        $(selectedFlagElement).removeClass().addClass("flag " + defaultFlag);
-        if (countryCodePlusSign)
-            $(countryCodeInput).val("+" + defaultCode);
-        else
-            $(countryCodeInput).val(defaultCode);
-    }
-    countryCodeInput.classList.add("country__code__input");
-    $(countryCodeInput).appendTo(countryCodeElement);
-}
 
 $(document).ready(function () {
     closeCountryLists();
@@ -107,8 +75,8 @@ $(document).ready(function () {
     $(".country__list__item").on('click', function (e) {
         let inputParent = $(this).closest(".phone__input")[0];
         let countryCodeInput = $(inputParent).find(".country__code__input")[0];
-        let selectedFlag = $(inputParent).find(".selected__flag .flag")[0];
-        $(selectedFlag).attr("class", "flag " + $(this).attr('data-country-flag'));
+        let selectedFlag = $(inputParent).find(".selected__flag .fg")[0];
+        $(selectedFlag).attr("class", "fg flag " + $(this).attr('data-country-flag'));
 
         let countryCodeValue = $(this).attr('data-country-code').replace('+', '');
         if (countryCodePlusSign)
@@ -118,26 +86,51 @@ $(document).ready(function () {
     });
 });
 
-function closeCountryLists() {
-    let countryList = $(".country__list");
-    if (countryList.length)
-        countryList.hide();
-    showAllCountryListItems();
-    clearSearchOnCountryListInputs();
+function changeFlagByCountryCode(inputContainer, countryCodeInput) {
+    let foundedIndex = -1;
+    let countryCodeElement = $(inputContainer).find(".country__code")[0];
+    let countryCodeValue = $(countryCodeInput).val();
+    let selectedFlagElement = $(countryCodeElement).find(".selected__flag .flag")[0];
+    countryCodeValue = countryCodeValue.replace('+', '');
+    if (countryCodeValue) {
+        $.each(countries, function (i, field) {
+            if (field['code'] === countryCodeValue) {
+                foundedIndex = i;
+                return false;
+            }
+        });
+        if (foundedIndex !== -1) {
+            let flag = '';
+            if (countries[foundedIndex])
+                flag = countries[foundedIndex]['flag'];
+
+            $(selectedFlagElement).removeClass().addClass("fg flag " + flag);
+            if (countryCodePlusSign)
+                $(countryCodeInput).val("+" + countryCodeValue);
+            else
+                $(countryCodeInput).val(countryCodeValue);
+        } else {
+            $(selectedFlagElement).removeClass().addClass("fg ");
+        }
+    } else {
+        $(selectedFlagElement).removeClass().addClass("fg ");
+    }
+    countryCodeInput.classList.add("country__code__input");
+    $(countryCodeInput).appendTo(countryCodeElement);
 }
 
 const CountryCodeTemplate = ({input_name, plus_sign, default_code, default_flag}) => `
         <div class="country__code">
             <div class="selected__flag">
-                <div class="flag ${default_flag}"></div>
+                <div class="fg flag ${default_flag}"></div>
             </div>
             <input type="text" class="country__code__input" name="${input_name}" readonly value="${plus_sign}${default_code}">
         </div>
 `;
-const CountryCodeWithoutInput = () => `
+const CountryCodeWithoutInput = ({default_flag}) => `
         <div class="country__code">
             <div class="selected__flag">
-                <div class="flag flag-dz"></div>
+                <div class="fg flag ${default_flag}"></div>
             </div>
         </div>
 `;
@@ -154,7 +147,7 @@ function createCountryCodePart(inputContainer, countryCodeInputName) {
 
 function createCountryCodeWithoutInput(inputContainer) {
     $(inputContainer).append([
-        {},
+        {default_flag: defaultFlag},
     ].map(CountryCodeWithoutInput).join(''));
 }
 
@@ -228,6 +221,14 @@ function showAllCountryListItems() {
     $.each(elements, function (index, item) {
         item.style.display = "flex";
     });
+}
+
+function closeCountryLists() {
+    let countryList = $(".country__list");
+    if (countryList.length)
+        countryList.hide();
+    showAllCountryListItems();
+    clearSearchOnCountryListInputs();
 }
 
 // from https://countrycode.org/
