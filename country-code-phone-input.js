@@ -1,3 +1,7 @@
+const countryCodePlusSign = true;
+const defaultCode = "1";
+const defaultFlag = "flag-us";
+
 function phoneInput(input_id) {
     let input = $('#' + input_id)[0];
     // if input doesn't exist won't do anything
@@ -12,15 +16,59 @@ function phoneInput(input_id) {
         inputParent.insertBefore(inputContainer, inputParent.children[inputIndex]);
 
         // country code input's name is given input name + _country_code
-        createCountryCodePart(inputContainer, $(input).attr("name") + '_country_code');
+        let countryCodeInputName = $(input).attr("name") + '_country_code';
+
+        // check country code input is given
+        let countryCodeInput = $('input[name="' + countryCodeInputName + '"]')[0];
+        if ($(countryCodeInput).length) {
+            createCountryCodeWithoutInput(inputContainer);
+            changeFlagByCountryCode(inputContainer, countryCodeInput);
+        } else {
+            createCountryCodePart(inputContainer, countryCodeInputName);
+        }
+
         createCountryListPart(inputContainer);
         let countryListElement = $(inputContainer).find(".country__list")[0];
         createCountryListItems(countryListElement);
+
         //finally put input to container
         $(input).appendTo(inputContainer);
         input.addEventListener('keydown', enforceFormat);
         input.addEventListener('keyup', formatToPhone);
     }
+}
+
+function changeFlagByCountryCode(inputContainer, countryCodeInput) {
+    let foundedIndex;
+    let countryCodeElement = $(inputContainer).find(".country__code")[0];
+    let countryCodeValue = $(countryCodeInput).val();
+    let selectedFlagElement = $(countryCodeElement).find(".selected__flag .flag")[0];
+    countryCodeValue = countryCodeValue.replace('+', '');
+    if (countryCodeValue) {
+        $.each(countries, function (i, field) {
+            if (field['code'] === countryCodeValue) {
+                foundedIndex = i;
+                return false;
+            }
+        });
+        let flag = '';
+        if (countries[foundedIndex])
+            flag = countries[foundedIndex]['flag'];
+
+        $(selectedFlagElement).removeClass().addClass("flag " + flag);
+        if (countryCodePlusSign)
+            $(countryCodeInput).val("+" + countryCodeValue);
+        else
+            $(countryCodeInput).val(countryCodeValue);
+    } else {
+        $(selectedFlagElement).removeClass().addClass("flag " + defaultFlag);
+        if (countryCodePlusSign)
+            $(countryCodeInput).val("+" + defaultCode);
+        else
+            $(countryCodeInput).val(defaultCode);
+    }
+    countryCodeInput.classList.add("country__code__input");
+    $(countryCodeInput).appendTo(countryCodeElement);
 }
 
 $(document).ready(function () {
@@ -60,7 +108,12 @@ $(document).ready(function () {
         let countryCodeInput = $(inputParent).find(".country__code__input")[0];
         let selectedFlag = $(inputParent).find(".selected__flag .flag")[0];
         $(selectedFlag).attr("class", "flag " + $(this).attr('data-country-flag'));
-        $(countryCodeInput).val($(this).attr('data-country-code'));
+
+        let countryCodeValue = $(this).attr('data-country-code').replace('+', '');
+        if (countryCodePlusSign)
+            $(countryCodeInput).val("+" + countryCodeValue);
+        else
+            $(countryCodeInput).val(countryCodeValue);
     });
 });
 
@@ -72,20 +125,36 @@ function closeCountryLists() {
     clearSearchOnCountryListInputs();
 }
 
-const CountryCodeTemplate = ({input_name}) => `
+const CountryCodeTemplate = ({input_name, plus_sign, default_code, default_flag}) => `
+        <div class="country__code">
+            <div class="selected__flag">
+                <div class="flag ${default_flag}"></div>
+            </div>
+            <input type="text" class="country__code__input" name="${input_name}" readonly value="${plus_sign}${default_code}">
+        </div>
+`;
+const CountryCodeWithoutInput = () => `
         <div class="country__code">
             <div class="selected__flag">
                 <div class="flag flag-dz"></div>
             </div>
-            <input type="text" class="country__code__input" name="${input_name}" readonly value="+213">
         </div>
 `;
 
 /* Appends country code template to container */
-function createCountryCodePart(inputContainer, countryCodeName) {
+function createCountryCodePart(inputContainer, countryCodeInputName) {
+    let plusSign = "+";
+    if (!countryCodePlusSign)
+        plusSign = "";
     $(inputContainer).append([
-        {input_name: countryCodeName},
+        {input_name: countryCodeInputName, plus_sign: plusSign, default_code: defaultCode, default_flag: defaultFlag},
     ].map(CountryCodeTemplate).join(''));
+}
+
+function createCountryCodeWithoutInput(inputContainer) {
+    $(inputContainer).append([
+        {},
+    ].map(CountryCodeWithoutInput).join(''));
 }
 
 const CountryListTemplate = () => `
