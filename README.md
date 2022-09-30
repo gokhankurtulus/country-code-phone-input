@@ -16,7 +16,7 @@
 ```
 <p>or if you want to give value</p>
 <h4>Warning!: Different flags may appear due to countries using the same code which is given.</h4>
-<p>Ex: Country code of Canada and USA is 1. </p>
+<p>e.g. country code of Canada and USA is 1. </p>
 
 ```html
 <input type="text" name="mobile-number_country_code" value="90"> <!-- This will allow you to enter code value -->
